@@ -18,4 +18,10 @@ contract KIP17MetadataMintable is KIP13, KIP17, KIP17Metadata, MinterRole {
         _setTokenURI(tokenId, tokenURI);
         return true;
     }
+
+    function mintWithProperty(address to, uint256 tokenid, string memory tokenURI, string[] property) public onlyMinter returns (bool) {
+        _mint(to, tokenId);
+        _setTokenURI(tokenId, tokenURI);
+        
+    }
 }

@@ -18,6 +18,12 @@ library Counters {
     }
 
     function decrement(Counter storage counter) internal {
+        uint256 value = counter._value;
+        require(value > 0, "Counter: devrement overflow");
         counter._value = counter._value.sub(1);
+    }
+
+    function reset(Counter storage counter) internal {
+        counter._value = 0;
     }
 }

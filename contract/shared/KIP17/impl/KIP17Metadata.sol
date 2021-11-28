@@ -11,6 +11,7 @@ contract KIP17Metadata is KIP13, KIP17, IKIP17Metadata {
     string private _symbol;
 
     mapping(uint256 => string) private _tokenURIs;
+    mapping(string => string) private _property;
 
     bytes4 private constant _INTERFACE_ID_KIP17_METADATA = 0x5b5e139f;
 
