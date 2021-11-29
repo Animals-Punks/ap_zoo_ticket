@@ -6,6 +6,7 @@ import "./KIP13.sol";
 import "../interfaces/IKIP17Enumerable.sol";
 
 contract KIP17Enumerable is KIP13, KIP17, IKIP17Enumerable {
+
     mapping(address => uint256[]) private _ownedTokens;
     mapping(uint256 => uint256) private _ownedTokensIndex;
     mapping(uint256 => uint256) private _allTokensIndex;

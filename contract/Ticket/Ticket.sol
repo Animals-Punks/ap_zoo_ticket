@@ -1,33 +1,28 @@
 pragma solidity ^0.5.0;
 
-import "../shared/KIP17/impl/KIP17Full.sol";
-import "../shared/KIP17/lib/Context.sol";
-import "../shared/KIP17/lib/Counters.sol";
+import "../shared/KIP17/KIP17Token.sol";
+import "../shared/KIP17/lib/access/roles/MinterRole.sol";
+import "../shared/KIP17/lib/TokenCounters.sol";
 
-contract Ticket is KIP17Full {
-    using Counters for Counters.Counter;
+contract Ticket is KIP17Token {
+    using TokenCounters for TokenCounters.Counter;
 
-    string TOKEN_NAME = "Animals Punks Zoo Ticket";
-    string TOKEN_SYMBOL = "APZT";
+    string TOKEN_NAME = "Animals Punks Ticket";
+    string TOKEN_SYMBOL = "APT";
     uint256 MAX_TICKET_SUPPLY = 10000;
     string private _baseTokenURI;
     address public minterContract;
     uint256 public _max_ticket_supply;
+    
+    TokenCounters.Counter private _tokenIdTracker;
 
-    Counters.Counter private _tokenIdTracker;
-
-    modifier onlyMinter() {
-        address msgSender = msg.sender;
-        require(msgSender == minterContract);
-        _;
-    }
-
-    constructor(string memory baseTokenURI) public KIP17Full(TOKEN_NAME, TOKEN_SYMBOL) {
+    constructor(string memory baseTokenURI) public KIP17Token(TOKEN_NAME, TOKEN_SYMBOL) {
         _baseTokenURI = baseTokenURI;
         _max_ticket_supply = MAX_TICKET_SUPPLY;
     }
 
-    function mint(address to) external onlyMinter {
+    function mintToken(address to) public {
+        require(isMinter(msg.sender), "You are not minter");
         require(totalSupply() < _max_ticket_supply, "Mint end");
         _mint(to, _tokenIdTracker.current());
         _tokenIdTracker.increment();
@@ -38,16 +33,17 @@ contract Ticket is KIP17Full {
         safeTransferFrom(from, to, tokenId);
     }
     
-    function setMinterContract(address saleContract) public onlyMinter {
+    function setMinterContract(address saleContract) public {
         minterContract = saleContract;
     }
 
-    function setBaseURI(string memory baseURI) public onlyMinter {
+    function setBaseURI(string memory baseURI) public {
         _baseTokenURI = baseURI;
     }
 
-    function burn(address reqOwner, uint256 tokenId) public onlyMinter {
-        address owner = ownerOf(tokenId);
+    function burn(address reqOwner, uint256 tokenId) public {
+        require(isMinter(msg.sender), "You are not minter");
+        address owner = getOwnerOf(tokenId);
         require(owner != reqOwner, "Owner un-match");
         _burn(owner, tokenId);
     }
@@ -59,6 +55,7 @@ contract Ticket is KIP17Full {
     function getOwnerOf(uint256 tokenId) public view returns (address) {
         return _getOwnerOf(tokenId);
     }
+    
 
     function _baseURI() internal view returns (string memory) {
         return _baseTokenURI;
