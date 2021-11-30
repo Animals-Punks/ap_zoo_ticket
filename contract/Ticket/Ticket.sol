@@ -4,7 +4,9 @@ import "../shared/KIP17/KIP17Token.sol";
 import "../shared/KIP17/lib/access/roles/MinterRole.sol";
 import "../shared/KIP17/lib/TokenCounters.sol";
 
-contract Ticket is KIP17Token {
+import "./interfaces/ITiket.sol";
+
+contract Ticket is ITicket, KIP17Token {
     using TokenCounters for TokenCounters.Counter;
 
     string TOKEN_NAME = "Animals Punks Ticket";
@@ -24,7 +26,8 @@ contract Ticket is KIP17Token {
     function mintToken(address to) public {
         require(isMinter(msg.sender), "You are not minter");
         require(totalSupply() < _max_ticket_supply, "Mint end");
-        _mint(to, _tokenIdTracker.current());
+        uint256 currentTokenId =  _tokenIdTracker.current();
+        _mint(to, currentTokenId);
         _tokenIdTracker.increment();
     }
 
