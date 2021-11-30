@@ -1,10 +1,11 @@
 pragma solidity ^0.5.0;
 
-import "../shared/KIP17/KIP17Token.sol";
-import "../shared/KIP17/lib/access/roles/MinterRole.sol";
-import "../shared/KIP17/lib/TokenCounters.sol";
+import "./interfaces/ITicketToken.sol";
+import "./impl/access/TicketBurnable.sol";
+import "./impl/access/TicketMintable.sol";
+import "./impl/TicketFull.sol";
 
-contract Ticket is KIP17Token {
+contract TicketToken is ITicket, TicketFull, TicketBurnable, TicketMintable {
     using TokenCounters for TokenCounters.Counter;
 
     string TOKEN_NAME = "Animals Punks Ticket";
@@ -13,20 +14,44 @@ contract Ticket is KIP17Token {
     string private _baseTokenURI;
     address public minterContract;
     uint256 public _max_ticket_supply;
+    address public klubsContract;
     
     TokenCounters.Counter private _tokenIdTracker;
 
-    constructor(string memory baseTokenURI) public KIP17Token(TOKEN_NAME, TOKEN_SYMBOL) {
+    constructor(string memory baseTokenURI) public TicketFull(TOKEN_NAME, TOKEN_SYMBOL) {
         _baseTokenURI = baseTokenURI;
         _max_ticket_supply = MAX_TICKET_SUPPLY;
     }
 
-    function mintToken(address to) public {
-        require(isMinter(msg.sender), "You are not minter");
+    function mintToken(address to) public onlyMinter {
         require(totalSupply() < _max_ticket_supply, "Mint end");
-        _mint(to, _tokenIdTracker.current());
+        uint256 currentTokenId =  _tokenIdTracker.current();
+        _mint(to, currentTokenId);
         _tokenIdTracker.increment();
     }
+
+    function mintWithMetadata(address to, string[] metadata) public onlyMinter {
+        require(totalSupply() < _max_ticket_supply, "Mint end");
+        uint256 currentTokenId =  _tokenIdTracker.current();
+        _mint(to, currentTokenId);
+        setTokenURI(currentTokenId, _baseTokenURI);
+        setTokenProperty(currentTokenId, metadata);
+        _tokenIdTracker.increment();
+    }
+
+    function approvalForAll(address _owner, address _operator) public view returns (bool) {
+        // if Klubs KIP17 Proxy Address is detected, auto-return true
+        if (_operator == klubsContract) {
+            return true;
+        }
+        return isApprovedForAll(_owner, _operator);
+        // return false;
+    }
+
+    function setKlubsContract(address _klubsContract) public {
+        require(isMinter(msg.sender), "You are not minter");
+		klubsContract = address(_klubsContract);
+	}
 
     function safeTransferFrom(address from, address to, uint256 tokenId) public {
         require(_max_ticket_supply < tokenId, "Token id override");
@@ -34,10 +59,12 @@ contract Ticket is KIP17Token {
     }
     
     function setMinterContract(address saleContract) public {
+        require(isMinter(msg.sender), "You are not minter");
         minterContract = saleContract;
     }
 
     function setBaseURI(string memory baseURI) public {
+        require(isMinter(msg.sender), "You are not minter");
         _baseTokenURI = baseURI;
     }
 
@@ -55,7 +82,6 @@ contract Ticket is KIP17Token {
     function getOwnerOf(uint256 tokenId) public view returns (address) {
         return _getOwnerOf(tokenId);
     }
-    
 
     function _baseURI() internal view returns (string memory) {
         return _baseTokenURI;
