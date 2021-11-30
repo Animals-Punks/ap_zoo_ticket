@@ -37,10 +37,12 @@ contract Ticket is ITicket, KIP17Token {
     }
     
     function setMinterContract(address saleContract) public {
+        require(isMinter(msg.sender), "You are not minter");
         minterContract = saleContract;
     }
 
     function setBaseURI(string memory baseURI) public {
+        require(isMinter(msg.sender), "You are not minter");
         _baseTokenURI = baseURI;
     }
 
