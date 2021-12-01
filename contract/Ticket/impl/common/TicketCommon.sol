@@ -67,4 +67,10 @@ contract TicketCommon is ITicketCommon {
         address owner = ownerOf(tokenId);
         return (spender == owner || getApproved(tokenId) == spender || isApprovedForAll(owner, spender));
     }
+
+    function _clearApproval(uint256 tokenId) public {
+        if (_tokenApprovals[tokenId] != address(0)) {
+            _tokenApprovals[tokenId] = address(0);
+        }
+    }
 }
