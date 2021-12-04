@@ -30,13 +30,14 @@ contract TicketToken is ITicketToken, TicketMetadata, TicketMint {
         _tokenIdTracker.increment();
     }
 
-    function mintWithMetadata(address to, string memory metadata) public onlyMinter {
+    function mintWithMetadata(address to, string memory metadata, string memory imageUri) public onlyMinter {
         require(totalSupply() < _max_ticket_supply, "Mint end");
         uint256 currentTokenId =  _tokenIdTracker.current();
         _mint(to, currentTokenId);
         string memory strTokenId = uint2str(currentTokenId);
         string memory tokenURI = _baseTokenURI.concat(strTokenId);
         setTokenURI(currentTokenId, tokenURI);
+        setTokenImageUrl(currentTokenId, imageUri);
         setTokenProperty(currentTokenId, metadata);
         _tokenIdTracker.increment();
     }
